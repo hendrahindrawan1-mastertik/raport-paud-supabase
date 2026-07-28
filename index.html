@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Raport PAUD</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="navbar"></div>
+<div class="container" id="konten">
+  <div class="loading">Memuat...</div>
+</div>
+<footer>Aplikasi Raport PAUD &middot; TAAM Nurul Iman &middot; ditenagai Supabase</footer>
+
+<script type="module">
+  import { wajibLogin, supabase } from './js/supabase-init.js';
+  import { renderNavbar } from './js/navbar.js';
+
+  await wajibLogin();
+  renderNavbar('dashboard');
+
+  const [{ count: jumlahSiswa }, { count: jumlahKelas }] = await Promise.all([
+    supabase.from('siswa').select('*', { count: 'exact', head: true }),
+    supabase.from('kelas').select('*', { count: 'exact', head: true }),
+  ]);
+
+  document.getElementById('konten').innerHTML = `
+    <h1>Selamat datang di Aplikasi Raport PAUD</h1>
+    <p>Kelola data siswa dan isi Laporan Perkembangan Anak per semester (6 aspek), lalu cetak raport otomatis. Data tersimpan di cloud (Supabase) sehingga bisa diakses dari mana saja, termasuk dari rumah masing-masing guru.</p>
+
+    <div class="grid-2">
+      <div class="card" style="text-align:center;">
+        <h2>👧 ${jumlahSiswa ?? 0}</h2>
+        <p>Siswa terdaftar</p>
+        <a class="btn small" href="siswa.html">Kelola Data Siswa</a>
+      </div>
+      <div class="card" style="text-align:center;">
+        <h2>🏫 ${jumlahKelas ?? 0}</h2>
+        <p>Kelas / rombel</p>
+        <a class="btn small" href="kelas.html">Kelola Kelas</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Langkah membuat raport</h2>
+      <ol>
+        <li>Lengkapi <a href="pengaturan.html">Pengaturan Sekolah</a> (nama yayasan, izin, NPSN, alamat, kepala sekolah, tahun ajaran, semester, dan 1-2 logo).</li>
+        <li>Pastikan <a href="kelas.html">data kelas</a> dan wali kelasnya sudah benar.</li>
+        <li>Tambahkan <a href="siswa.html">biodata siswa</a>.</li>
+        <li>Di halaman <strong>Data Siswa</strong>, klik <strong>"📝 Isi Laporan Semester"</strong> pada siswa yang diinginkan -- isi ke-6 aspek perkembangan lengkap dengan foto dan poin-poin capaian/bimbingan, plus data pertumbuhan &amp; kehadiran.</li>
+        <li>Klik <strong>"🖨️ Cetak Raport"</strong> -- raport resmi otomatis tersusun, siap dicetak / disimpan sebagai PDF dari browser.</li>
+      </ol>
+    </div>
+  `;
+</script>
+</body>
+</html>

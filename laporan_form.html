@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Isi Laporan Perkembangan - Raport PAUD</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="navbar"></div>
+<div class="container">
+  <div class="top-actions">
+    <h1>Isi Laporan Perkembangan Anak</h1>
+    <a class="btn secondary" id="linkCetak" href="#" target="_blank">👁️ Lihat / Cetak Raport</a>
+  </div>
+  <p id="infoSiswa"><strong>Memuat...</strong></p>
+  <div id="pesan"></div>
+
+  <div class="card">
+    <div style="display:flex;gap:16px;align-items:end;flex-wrap:wrap;">
+      <div style="width:200px;">
+        <label style="margin-top:0;">Tahun Ajaran</label>
+        <input type="text" id="tahun_ajaran">
+      </div>
+      <div style="width:160px;">
+        <label style="margin-top:0;">Semester</label>
+        <select id="semester">
+          <option value="I (Satu)">I (Satu)</option>
+          <option value="II (Dua)">II (Dua)</option>
+        </select>
+      </div>
+      <button class="btn secondary" id="btnGantiPeriode" type="button">Buka / Ganti Periode</button>
+    </div>
+    <div class="helper-text" style="margin-top:8px;">Mengganti tahun ajaran/semester akan membuka (atau membuat baru) laporan untuk periode tersebut, terpisah dari periode lain.</div>
+  </div>
+
+  <form id="formLaporan">
+    <div id="aspekContainer"></div>
+
+    <div class="card">
+      <h2>Catatan Penutup</h2>
+      <input type="text" id="catatan_penutup" value="Tetap semangat ya..sayang">
+    </div>
+
+    <div class="card">
+      <h2>Pertumbuhan &amp; Kehadiran</h2>
+      <div class="grid-2">
+        <div>
+          <h3 style="margin-top:0;">Pertumbuhan</h3>
+          <label>Berat Badan</label><input type="text" id="berat_badan" placeholder="14 Kg">
+          <label>Tinggi Badan</label><input type="text" id="tinggi_badan" placeholder="106 Cm">
+          <label>Lingkar Kepala</label><input type="text" id="lingkar_kepala" placeholder="50 Cm">
+        </div>
+        <div>
+          <h3 style="margin-top:0;">Kehadiran</h3>
+          <label>Sakit</label><input type="text" id="sakit" placeholder="5 Hari">
+          <label>Izin</label><input type="text" id="izin" placeholder="-">
+          <label>Tanpa Keterangan</label><input type="text" id="tanpa_keterangan" placeholder="-">
+        </div>
+      </div>
+      <label>Tanggal Raport (untuk tanda tangan, mis. "Depok, 22 Desember 2025")</label>
+      <input type="date" id="tanggal_raport">
+    </div>
+
+    <div class="card actions">
+      <button class="btn" type="submit" id="btnSimpan">💾 Simpan Laporan</button>
+      <a class="btn secondary" href="siswa.html">Kembali ke Data Siswa</a>
+    </div>
+  </form>
+</div>
+<footer>Aplikasi Raport PAUD &middot; TAAM Nurul Iman &middot; ditenagai Supabase</footer>
+
+<script type="module">
+  import { wajibLogin, supabase, unggahGambar, escapeHtml } from './js/supabase-init.js';
+  import { renderNavbar } from './js/navbar.js';
+  import { ASPEK_LIST, TEKS_INTRO_BIMBINGAN } from './js/aspek.js';
+
+  await wajibLogin();
+  renderNavbar('siswa');
+
+  const params = new URLSearchParams(location.search);
+  const siswaId = params.get('siswa_id');
+  if (!siswaId) { document.body.innerHTML = '<p style="padding:40px;">Siswa tidak ditemukan.</p>'; throw new Error('no siswa_id'); }
+
+  const { data: siswa, error: errSiswa } = await supabase.from('siswa').select('*').eq('id', siswaId).single();
+  if (errSiswa || !siswa) { document.body.innerHTML = '<p style="padding:40px;">Data siswa tidak ditemukan.</p>'; throw new Error('siswa not found'); }
+
+  const { data: sekolah } = await supabase.from('sekolah').select('*').eq('id', 1).single();
+
+  document.getElementById('infoSiswa').innerHTML = `<strong>${escapeHtml(siswa.nama)}</strong>`;
+  document.getElementById('tahun_ajaran').value = params.get('tahun_ajaran') || sekolah?.tahun_ajaran || '2025/2026';
+  document.getElementById('semester').value = params.get('semester') || sekolah?.semester || 'I (Satu)';
+
+  function renderAspekForm() {
+    const cont = document.getElementById('aspekContainer');
+    cont.innerHTML = Object.entries(ASPEK_LIST).map(([kode, info]) => `
+      <div class="card">
+        <h2>Perkembangan ${escapeHtml(info.label)}</h2>
+        <p class="helper-text" style="font-style:italic;">"${escapeHtml(info.intro)}"</p>
+        <label>Foto Dokumentasi</label>
+        <input type="file" accept="image/*" id="${kode}_foto">
+        <div id="preview_${kode}" style="margin-top:8px;"></div>
+        <label>Poin-poin Capaian (satu poin per baris)</label>
+        <textarea id="${kode}_capaian" rows="5" placeholder="Ananda dapat ...&#10;Ananda dapat ..."></textarea>
+        <label>Poin-poin yang Perlu Bimbingan / Motivasi (satu poin per baris)</label>
+        <p class="helper-text" style="margin:0 0 6px;font-style:italic;">"${escapeHtml(TEKS_INTRO_BIMBINGAN)}"</p>
+        <textarea id="${kode}_bimbingan" rows="4" placeholder="Ananda masih kami beri bimbingan ..."></textarea>
+      </div>
+    `).join('');
+  }
+
+  let lapExisting = {};
+
+  async function muatLaporan() {
+    const tahunAjaran = document.getElementById('tahun_ajaran').value;
+    const semester = document.getElementById('semester').value;
+    document.getElementById('linkCetak').href = `cetak.html?siswa_id=${siswaId}&tahun_ajaran=${encodeURIComponent(tahunAjaran)}&semester=${encodeURIComponent(semester)}`;
+
+    renderAspekForm();
+    const { data } = await supabase.from('raport_semester').select('*')
+      .eq('siswa_id', siswaId).eq('tahun_ajaran', tahunAjaran).eq('semester', semester)
+      .maybeSingle();
+    lapExisting = data || {};
+
+    document.getElementById('catatan_penutup').value = lapExisting.catatan_penutup ?? 'Tetap semangat ya..sayang';
+    document.getElementById('berat_badan').value = lapExisting.berat_badan || '';
+    document.getElementById('tinggi_badan').value = lapExisting.tinggi_badan || '';
+    document.getElementById('lingkar_kepala').value = lapExisting.lingkar_kepala || '';
+    document.getElementById('sakit').value = lapExisting.sakit || '';
+    document.getElementById('izin').value = lapExisting.izin || '';
+    document.getElementById('tanpa_keterangan').value = lapExisting.tanpa_keterangan || '';
+    document.getElementById('tanggal_raport').value = lapExisting.tanggal_raport || new Date().toISOString().slice(0,10);
+
+    for (const kode of Object.keys(ASPEK_LIST)) {
+      document.getElementById(`${kode}_capaian`).value = lapExisting[`${kode}_capaian`] || '';
+      document.getElementById(`${kode}_bimbingan`).value = lapExisting[`${kode}_bimbingan`] || '';
+      const url = lapExisting[`${kode}_foto_url`];
+      document.getElementById(`preview_${kode}`).innerHTML = url ? `<img class="foto-preview-lg" src="${url}">` : '';
+    }
+  }
+
+  document.getElementById('btnGantiPeriode').addEventListener('click', muatLaporan);
+
+  document.getElementById('formLaporan').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSimpan');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    try {
+      const tahunAjaran = document.getElementById('tahun_ajaran').value;
+      const semester = document.getElementById('semester').value;
+      const payload = {
+        siswa_id: siswaId,
+        tahun_ajaran: tahunAjaran,
+        semester: semester,
+        catatan_penutup: document.getElementById('catatan_penutup').value,
+        berat_badan: document.getElementById('berat_badan').value,
+        tinggi_badan: document.getElementById('tinggi_badan').value,
+        lingkar_kepala: document.getElementById('lingkar_kepala').value,
+        sakit: document.getElementById('sakit').value,
+        izin: document.getElementById('izin').value,
+        tanpa_keterangan: document.getElementById('tanpa_keterangan').value,
+        tanggal_raport: document.getElementById('tanggal_raport').value || null,
+      };
+      if (lapExisting.id) payload.id = lapExisting.id;
+
+      for (const kode of Object.keys(ASPEK_LIST)) {
+        payload[`${kode}_capaian`] = document.getElementById(`${kode}_capaian`).value;
+        payload[`${kode}_bimbingan`] = document.getElementById(`${kode}_bimbingan`).value;
+        const file = document.getElementById(`${kode}_foto`).files[0];
+        if (file) {
+          payload[`${kode}_foto_url`] = await unggahGambar(file, 'perkembangan');
+        } else if (lapExisting[`${kode}_foto_url`]) {
+          payload[`${kode}_foto_url`] = lapExisting[`${kode}_foto_url`];
+        }
+      }
+
+      const { error } = await supabase.from('raport_semester')
+        .upsert(payload, { onConflict: 'siswa_id,tahun_ajaran,semester' });
+      if (error) throw error;
+
+      document.getElementById('pesan').innerHTML = '<div class="alert success">Laporan perkembangan berhasil disimpan.</div>';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      muatLaporan();
+    } catch (err) {
+      document.getElementById('pesan').innerHTML = `<div class="alert error">Gagal menyimpan: ${escapeHtml(err.message)}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 Simpan Laporan';
+    }
+  });
+
+  await muatLaporan();
+</script>
+</body>
+</html>

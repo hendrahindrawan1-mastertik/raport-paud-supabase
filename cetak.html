@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Cetak Raport - Raport PAUD</title>
+<style>
+  @page { size: A4; margin: 12mm 14mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; color:#111; margin:0; background:#e9ece9; font-size:10.5pt; }
+
+  .toolbar { position:sticky; top:0; z-index:10; background:#1f4d36; padding:12px 20px; display:flex; gap:10px; align-items:center; }
+  .toolbar button, .toolbar a { background:#2f6f4f; color:#fff; border:none; padding:9px 16px; border-radius:6px; font-weight:600; cursor:pointer; text-decoration:none; font-size:.9rem; }
+  .toolbar span { color:#fff; font-size:.85rem; opacity:.85; }
+
+  .sheet { background:#fff; width:210mm; min-height:297mm; margin:16px auto; padding:12mm 14mm; box-shadow:0 0 8px rgba(0,0,0,.15); }
+
+  .kop { display:flex; align-items:center; gap:14px; }
+  .kop img.logo { width:78px; height:78px; object-fit:contain; flex-shrink:0; }
+  .kop .teks-kop { text-align:center; flex:1; }
+  .kop .teks-kop .yayasan { font-weight:bold; font-size:12.5pt; }
+  .kop .teks-kop .sekolah { font-weight:bold; font-size:14pt; margin-top:2px; }
+  .kop .teks-kop .info { font-weight:bold; font-size:9.5pt; margin-top:3px; }
+  .garis-kop { border:none; border-top:3px double #111; margin:6px 0 12px; }
+
+  .judul { text-align:center; font-weight:bold; font-size:13pt; margin:0 0 14px; line-height:1.4; }
+
+  table.identitas { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10.5pt; }
+  table.identitas td { padding:3px 4px; vertical-align:top; }
+  table.identitas td.label { font-weight:bold; width:110px; }
+  table.identitas td.titik { font-weight:bold; width:16px; }
+
+  .aspek { border:1.5px solid #111; margin-bottom:-1.5px; page-break-inside:avoid; }
+  .aspek .judul-aspek { font-weight:bold; font-size:10.5pt; padding:5px 8px; border-bottom:1.5px solid #111; background:#f2f2f2; }
+  .aspek .baris-bimbingan { padding:8px 10px 8px; border-top:1.5px solid #111; }
+  table.baris-capaian { width:100%; border-collapse:collapse; }
+  table.baris-capaian td { padding:8px 10px 8px; vertical-align:top; }
+  table.baris-capaian td.kolom-foto { width:132px; }
+  table.baris-capaian img.foto { width:120px; display:block; border:1px solid #999; }
+  .aspek .intro { margin:0 0 4px; }
+  .aspek ul { margin:0 0 6px; padding-left:20px; }
+  .aspek ul li { margin-bottom:2px; }
+  .aspek .intro-bimbingan { margin:6px 0 4px; }
+
+  .penutup { border:1.5px solid #111; border-top:none; padding:6px 10px; margin-bottom:-1.5px; font-style:italic; }
+
+  table.tumbuh-hadir { width:100%; border-collapse:collapse; margin-top:0; font-size:10.2pt; }
+  table.tumbuh-hadir th { border:1.5px solid #111; background:#f2f2f2; text-align:left; padding:5px 8px; }
+  table.tumbuh-hadir td { border:1.5px solid #111; padding:5px 8px; vertical-align:top; }
+  table.tumbuh-hadir ul { margin:0; padding-left:18px; }
+  table.tumbuh-hadir li { margin-bottom:6px; }
+
+  .ttd-row { display:flex; justify-content:space-between; margin-top:26px; font-size:10.5pt; }
+  .ttd-row .kiri { width:45%; }
+  .ttd-row .kanan { width:45%; text-align:left; }
+  .ttd-row .spasi { height:55px; }
+
+  .ttd-kepsek { margin-top:26px; text-align:center; font-size:10.5pt; }
+  .ttd-kepsek .spasi { height:50px; }
+
+  .loading { padding:60px; text-align:center; font-family:Arial; color:#666; }
+
+  @media print {
+    .toolbar { display:none; }
+    .sheet { box-shadow:none; margin:0; width:auto; min-height:auto; }
+    body { background:#fff; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="window.print()">🖨️ Cetak / Simpan sebagai PDF</button>
+  <a id="linkEdit" href="#">&larr; Edit Laporan</a>
+  <span id="infoAtas">Memuat laporan...</span>
+</div>
+
+<div id="konten"><div class="loading">Memuat data raport...</div></div>
+
+<script type="module">
+  import { wajibLogin, supabase, escapeHtml, tanggalIndo } from './js/supabase-init.js';
+  import { ASPEK_LIST, TEKS_INTRO_BIMBINGAN } from './js/aspek.js';
+
+  await wajibLogin();
+
+  const params = new URLSearchParams(location.search);
+  const siswaId = params.get('siswa_id');
+  const kontenEl = document.getElementById('konten');
+
+  if (!siswaId) { kontenEl.innerHTML = '<div class="loading">Siswa tidak ditemukan.</div>'; throw new Error('no siswa_id'); }
+
+  const { data: siswa } = await supabase.from('siswa').select('*').eq('id', siswaId).single();
+  if (!siswa) { kontenEl.innerHTML = '<div class="loading">Data siswa tidak ditemukan.</div>'; throw new Error('siswa not found'); }
+
+  const { data: sekolah } = await supabase.from('sekolah').select('*').eq('id', 1).single();
+
+  let waliKelas = '';
+  if (siswa.kelas_id) {
+    const { data: kelas } = await supabase.from('kelas').select('*').eq('id', siswa.kelas_id).single();
+    waliKelas = kelas?.wali_kelas || '';
+  }
+
+  const tahunAjaran = params.get('tahun_ajaran') || sekolah?.tahun_ajaran || '2025/2026';
+  const semester = params.get('semester') || sekolah?.semester || 'I (Satu)';
+
+  document.getElementById('linkEdit').href = `laporan_form.html?siswa_id=${siswaId}&tahun_ajaran=${encodeURIComponent(tahunAjaran)}&semester=${encodeURIComponent(semester)}`;
+  document.getElementById('infoAtas').textContent = `Laporan Perkembangan Anak — ${siswa.nama} — T.A. ${tahunAjaran} Semester ${semester}`;
+
+  const { data: lap } = await supabase.from('raport_semester').select('*')
+    .eq('siswa_id', siswaId).eq('tahun_ajaran', tahunAjaran).eq('semester', semester)
+    .maybeSingle();
+
+  if (!lap) {
+    kontenEl.innerHTML = `
+      <div class="loading">
+        <h2>Laporan belum diisi</h2>
+        <p>Laporan perkembangan untuk <strong>${escapeHtml(siswa.nama)}</strong> pada Tahun Ajaran ${escapeHtml(tahunAjaran)} Semester ${escapeHtml(semester)} belum diisi.</p>
+        <p><a href="laporan_form.html?siswa_id=${siswaId}&tahun_ajaran=${encodeURIComponent(tahunAjaran)}&semester=${encodeURIComponent(semester)}">Isi laporan sekarang &rarr;</a></p>
+      </div>`;
+    throw new Error('laporan belum ada');
+  }
+
+  function poinList(teks) {
+    return (teks || '').split(/\r\n|\r|\n/).map(s => s.trim()).filter(s => s !== '')
+      .map(s => `<li>${escapeHtml(s)}</li>`).join('');
+  }
+
+  const htmlAspek = Object.entries(ASPEK_LIST).map(([kode, info]) => {
+    const fotoUrl = lap[`${kode}_foto_url`];
+    const bimbingan = lap[`${kode}_bimbingan`] || '';
+    return `
+      <div class="aspek">
+        <div class="judul-aspek">PERKEMBANGAN ${info.label.toUpperCase()}</div>
+        <table class="baris-capaian">
+          <tr>
+            ${fotoUrl ? `<td class="kolom-foto"><img class="foto" src="${fotoUrl}"></td>` : ''}
+            <td>
+              <p class="intro">${escapeHtml(info.intro)}</p>
+              <ul>${poinList(lap[`${kode}_capaian`])}</ul>
+            </td>
+          </tr>
+        </table>
+        ${bimbingan.trim() !== '' ? `
+          <div class="baris-bimbingan">
+            <p class="intro-bimbingan">${TEKS_INTRO_BIMBINGAN}</p>
+            <ul>${poinList(bimbingan)}</ul>
+          </div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  kontenEl.innerHTML = `
+    <div class="sheet">
+      <div class="kop">
+        ${sekolah?.logo_url ? `<img class="logo" src="${sekolah.logo_url}">` : ''}
+        <div class="teks-kop">
+          <div class="yayasan">${escapeHtml(sekolah?.nama_yayasan) || ''}</div>
+          <div class="sekolah">${escapeHtml(sekolah?.nama_sekolah) || ''}</div>
+          <div class="info">${escapeHtml(sekolah?.izin) || ''} &nbsp; NPSN : ${escapeHtml(sekolah?.npsn) || ''}</div>
+          <div class="info">Alamat : ${escapeHtml(sekolah?.alamat) || ''}</div>
+        </div>
+        ${sekolah?.logo_yayasan_url ? `<img class="logo" src="${sekolah.logo_yayasan_url}">` : ''}
+      </div>
+      <hr class="garis-kop">
+
+      <div class="judul">LAPORAN PERKEMBANGAN ANAK<br>TAHUN AJARAN ${escapeHtml(tahunAjaran)}</div>
+
+      <table class="identitas">
+        <tr><td class="label">NAMA ANAK</td><td class="titik">:</td><td><strong>${escapeHtml(siswa.nama)}</strong></td></tr>
+        <tr>
+          <td class="label">NIS/NISN</td><td class="titik">:</td>
+          <td><strong>${escapeHtml(siswa.nis) || '-'}/${escapeHtml(siswa.nisn) || '-'}</strong></td>
+          <td class="label" style="width:90px;">SEMESTER</td><td class="titik">:</td><td><strong>${escapeHtml(semester)}</strong></td>
+        </tr>
+      </table>
+
+      ${htmlAspek}
+
+      ${(lap.catatan_penutup || '').trim() !== '' ? `<div class="penutup">${escapeHtml(lap.catatan_penutup)}</div>` : ''}
+
+      <table class="tumbuh-hadir">
+        <tr><th style="width:50%;">PERTUMBUHAN</th><th>KEHADIRAN</th></tr>
+        <tr>
+          <td><ul>
+            <li>Berat Badan &nbsp;: ${escapeHtml(lap.berat_badan) || '-'}</li>
+            <li>Tinggi Badan &nbsp;: ${escapeHtml(lap.tinggi_badan) || '-'}</li>
+            <li>Lingkar Kepala : ${escapeHtml(lap.lingkar_kepala) || '-'}</li>
+          </ul></td>
+          <td><ul>
+            <li>Sakit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${escapeHtml(lap.sakit) || '-'}</li>
+            <li>Izin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${escapeHtml(lap.izin) || '-'}</li>
+            <li>Tanpa Keterangan : ${escapeHtml(lap.tanpa_keterangan) || '-'}</li>
+          </ul></td>
+        </tr>
+      </table>
+
+      <div class="ttd-row">
+        <div class="kiri">
+          Orang Tua / Wali
+          <div class="spasi"></div>
+          <strong>(________________________)</strong>
+        </div>
+        <div class="kanan">
+          <strong>${escapeHtml(sekolah?.kota) || 'Depok'}, ${tanggalIndo(lap.tanggal_raport)}</strong><br>
+          Wali Kelas
+          <div class="spasi"></div>
+          <strong>${escapeHtml(waliKelas) || '________________________'}</strong>
+        </div>
+      </div>
+
+      <div class="ttd-kepsek">
+        Mengetahui,<br>Kepala Sekolah ${escapeHtml(sekolah?.nama_sekolah) || ''}
+        <div class="spasi"></div>
+        <strong>${escapeHtml(sekolah?.kepala_sekolah) || '________________________'}</strong>
+      </div>
+    </div>
+  `;
+</script>
+</body>
+</html>

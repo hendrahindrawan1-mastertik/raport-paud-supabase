@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pengaturan Sekolah - Raport PAUD</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="navbar"></div>
+<div class="container">
+  <div class="top-actions"><h1>Pengaturan Sekolah</h1></div>
+  <p>Data berikut akan tampil pada kop setiap raport yang dicetak.</p>
+  <div id="pesan"></div>
+
+  <div class="card">
+    <form id="formSekolah">
+      <div class="grid-2">
+        <div><label>Nama Sekolah / TK</label><input type="text" id="nama_sekolah" required></div>
+        <div><label>Nama Yayasan</label><input type="text" id="nama_yayasan"></div>
+      </div>
+      <div class="grid-2">
+        <div><label>Nomor Izin Operasional</label><input type="text" id="izin"></div>
+        <div><label>NPSN</label><input type="text" id="npsn"></div>
+      </div>
+      <label>Alamat Sekolah</label>
+      <input type="text" id="alamat">
+
+      <div class="grid-3">
+        <div><label>Kepala Sekolah</label><input type="text" id="kepala_sekolah"></div>
+        <div><label>Tahun Ajaran</label><input type="text" id="tahun_ajaran" placeholder="2025/2026"></div>
+        <div><label>Semester Berjalan</label>
+          <select id="semester">
+            <option value="I (Satu)">I (Satu)</option>
+            <option value="II (Dua)">II (Dua)</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Kota (untuk tanggal cetak, mis. "Depok, 22 Desember 2025")</label>
+      <input type="text" id="kota" placeholder="Depok">
+
+      <div class="grid-2">
+        <div>
+          <label>Logo Kiri</label>
+          <input type="file" id="logo" accept="image/*">
+          <div id="previewLogo" style="margin-top:8px;"></div>
+        </div>
+        <div>
+          <label>Logo Kanan</label>
+          <input type="file" id="logo_yayasan" accept="image/*">
+          <div id="previewLogoYayasan" style="margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <button class="btn" type="submit" id="btnSimpan">Simpan Pengaturan</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Ganti Password Login Bersama</h2>
+    <p class="helper-text">Password ini dipakai bersama oleh semua guru untuk masuk ke aplikasi.</p>
+    <div id="pesanPassword"></div>
+    <form id="formPassword">
+      <label>Password Baru</label>
+      <input type="password" id="password_baru" minlength="6" required>
+      <label>Ulangi Password Baru</label>
+      <input type="password" id="password_ulang" minlength="6" required>
+      <div style="margin-top:16px;">
+        <button class="btn secondary" type="submit">Ganti Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+<footer>Aplikasi Raport PAUD &middot; TAAM Nurul Iman &middot; ditenagai Supabase</footer>
+
+<script type="module">
+  import { wajibLogin, supabase, unggahGambar } from './js/supabase-init.js';
+  import { renderNavbar } from './js/navbar.js';
+
+  await wajibLogin();
+  renderNavbar('pengaturan');
+
+  const { data } = await supabase.from('sekolah').select('*').eq('id', 1).single();
+
+  document.getElementById('nama_sekolah').value = data?.nama_sekolah || 'TAAM NURUL IMAN';
+  document.getElementById('nama_yayasan').value = data?.nama_yayasan || '';
+  document.getElementById('izin').value = data?.izin || '';
+  document.getElementById('npsn').value = data?.npsn || '';
+  document.getElementById('alamat').value = data?.alamat || '';
+  document.getElementById('kepala_sekolah').value = data?.kepala_sekolah || '';
+  document.getElementById('tahun_ajaran').value = data?.tahun_ajaran || '2025/2026';
+  document.getElementById('semester').value = data?.semester || 'I (Satu)';
+  document.getElementById('kota').value = data?.kota || 'Depok';
+  if (data?.logo_url) document.getElementById('previewLogo').innerHTML = `<img class="foto-preview" src="${data.logo_url}">`;
+  if (data?.logo_yayasan_url) document.getElementById('previewLogoYayasan').innerHTML = `<img class="foto-preview" src="${data.logo_yayasan_url}">`;
+
+  document.getElementById('formSekolah').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSimpan');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    try {
+      const payload = {
+        id: 1,
+        nama_sekolah: document.getElementById('nama_sekolah').value,
+        nama_yayasan: document.getElementById('nama_yayasan').value,
+        izin: document.getElementById('izin').value,
+        npsn: document.getElementById('npsn').value,
+        alamat: document.getElementById('alamat').value,
+        kepala_sekolah: document.getElementById('kepala_sekolah').value,
+        tahun_ajaran: document.getElementById('tahun_ajaran').value,
+        semester: document.getElementById('semester').value,
+        kota: document.getElementById('kota').value,
+      };
+      const fileLogo = document.getElementById('logo').files[0];
+      const fileLogoYayasan = document.getElementById('logo_yayasan').files[0];
+      if (fileLogo) payload.logo_url = await unggahGambar(fileLogo, 'logo');
+      if (fileLogoYayasan) payload.logo_yayasan_url = await unggahGambar(fileLogoYayasan, 'logo');
+
+      const { error } = await supabase.from('sekolah').upsert(payload, { onConflict: 'id' });
+      if (error) throw error;
+      document.getElementById('pesan').innerHTML = '<div class="alert success">Pengaturan sekolah berhasil disimpan.</div>';
+    } catch (err) {
+      document.getElementById('pesan').innerHTML = `<div class="alert error">Gagal menyimpan: ${err.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Simpan Pengaturan';
+    }
+  });
+
+  document.getElementById('formPassword').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const p1 = document.getElementById('password_baru').value;
+    const p2 = document.getElementById('password_ulang').value;
+    const pesanEl = document.getElementById('pesanPassword');
+    if (p1 !== p2) {
+      pesanEl.innerHTML = '<div class="alert error">Password baru dan ulangannya tidak sama.</div>';
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: p1 });
+    if (error) {
+      pesanEl.innerHTML = `<div class="alert error">Gagal mengganti password: ${error.message}</div>`;
+    } else {
+      pesanEl.innerHTML = '<div class="alert success">Password berhasil diganti. Gunakan password baru ini saat login berikutnya.</div>';
+      document.getElementById('formPassword').reset();
+    }
+  });
+</script>
+</body>
+</html>

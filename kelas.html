@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Kelas - Raport PAUD</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="navbar"></div>
+<div class="container">
+  <div class="top-actions">
+    <h1>Data Kelas</h1>
+    <button class="btn" id="btnTambah">+ Tambah Kelas</button>
+  </div>
+  <div id="pesan"></div>
+
+  <div class="card" id="cardForm" style="display:none;">
+    <h2 id="judulForm">Tambah Kelas</h2>
+    <form id="formKelas">
+      <input type="hidden" id="kelasId">
+      <label>Nama Kelas</label>
+      <input type="text" id="nama_kelas" placeholder="contoh: TK A" required>
+      <label>Wali Kelas</label>
+      <input type="text" id="wali_kelas" placeholder="Nama guru wali kelas">
+      <div style="margin-top:16px;" class="actions">
+        <button class="btn" type="submit">Simpan</button>
+        <button class="btn secondary" type="button" id="btnBatal">Batal</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <table>
+      <tr><th>Nama Kelas</th><th>Wali Kelas</th><th>Aksi</th></tr>
+      <tbody id="tbodyKelas"><tr><td colspan="3" class="empty">Memuat...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<footer>Aplikasi Raport PAUD &middot; TAAM Nurul Iman &middot; ditenagai Supabase</footer>
+
+<script type="module">
+  import { wajibLogin, supabase, escapeHtml } from './js/supabase-init.js';
+  import { renderNavbar } from './js/navbar.js';
+
+  await wajibLogin();
+  renderNavbar('kelas');
+
+  let daftarKelas = [];
+
+  async function muatKelas() {
+    const { data, error } = await supabase.from('kelas').select('*').order('nama_kelas');
+    const tbody = document.getElementById('tbodyKelas');
+    if (error) { tbody.innerHTML = `<tr><td colspan="3" class="empty">Gagal memuat: ${escapeHtml(error.message)}</td></tr>`; return; }
+    daftarKelas = data || [];
+    if (daftarKelas.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty">Belum ada data kelas.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = daftarKelas.map(k => `
+      <tr>
+        <td>${escapeHtml(k.nama_kelas)}</td>
+        <td>${escapeHtml(k.wali_kelas) || '-'}</td>
+        <td class="actions">
+          <button class="btn small" onclick="editKelas('${k.id}')">Edit</button>
+          <button class="btn small danger" onclick="hapusKelas('${k.id}')">Hapus</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function tampilkanForm(judul) {
+    document.getElementById('judulForm').textContent = judul;
+    document.getElementById('cardForm').style.display = 'block';
+  }
+  function sembunyikanForm() {
+    document.getElementById('formKelas').reset();
+    document.getElementById('kelasId').value = '';
+    document.getElementById('cardForm').style.display = 'none';
+  }
+
+  document.getElementById('btnTambah').addEventListener('click', () => tampilkanForm('Tambah Kelas'));
+  document.getElementById('btnBatal').addEventListener('click', sembunyikanForm);
+
+  window.editKelas = (id) => {
+    const k = daftarKelas.find(x => x.id === id);
+    if (!k) return;
+    document.getElementById('kelasId').value = id;
+    document.getElementById('nama_kelas').value = k.nama_kelas || '';
+    document.getElementById('wali_kelas').value = k.wali_kelas || '';
+    tampilkanForm('Edit Kelas');
+  };
+
+  window.hapusKelas = async (id) => {
+    if (!confirm('Hapus kelas ini? (Data siswa di kelas ini tidak ikut terhapus, tapi jadi tanpa kelas)')) return;
+    await supabase.from('kelas').delete().eq('id', id);
+    muatKelas();
+  };
+
+  document.getElementById('formKelas').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('kelasId').value;
+    const payload = {
+      nama_kelas: document.getElementById('nama_kelas').value,
+      wali_kelas: document.getElementById('wali_kelas').value,
+    };
+    const { error } = id
+      ? await supabase.from('kelas').update(payload).eq('id', id)
+      : await supabase.from('kelas').insert(payload);
+
+    if (error) {
+      document.getElementById('pesan').innerHTML = `<div class="alert error">Gagal menyimpan: ${escapeHtml(error.message)}</div>`;
+    } else {
+      sembunyikanForm();
+      document.getElementById('pesan').innerHTML = '<div class="alert success">Data kelas berhasil disimpan.</div>';
+      muatKelas();
+    }
+  });
+
+  muatKelas();
+</script>
+</body>
+</html>
