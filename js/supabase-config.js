@@ -1,4 +1,1 @@
-export const SUPABASE_CONFIG = {
-     url: "https://yppxcijzkwhebupetgdr.supabase.co",
-     anonKey: "sb_publishable_5jgFnl-g-kSMaGVZtVVLIA_9ivHh...(lanjutkan sampai selesai, jangan terpotong)",
-   };
+export const SUPABASE_CONFIG = { url: "https://vfnryjrbfuxhbatysyjd.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmbnJ5anJiZnV4aGJhdHlzeWpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTUwMTYsImV4cCI6MjEwMDU3MTAxNn0.lfpH9TL9a-tn9ilgU_oqDiMzzzySa1wvSdePCVoS-As", };
