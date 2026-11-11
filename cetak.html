@@ -4,64 +4,79 @@
 <meta charset="UTF-8">
 <title>Cetak Raport - Raport PAUD</title>
 <style>
-  @page { size: A4; margin: 12mm 14mm; }
+  /* Kertas F4 (215 x 330 mm). Ubah angka di bawah ini jika sekolah punya ukuran baku lain:
+     atas-bawah 12mm, kiri-kanan 15mm. Samakan juga dengan padding .sheet di bawah. */
+  @page { size: 215mm 330mm; margin: 12mm 15mm; }
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; color:#111; margin:0; background:#e9ece9; font-size:10.5pt; }
+  body { font-family: Arial, Helvetica, sans-serif; color:#111; margin:0; background:#e9ece9; font-size:12pt; line-height:1.35; }
+  p { margin:0; }
 
-  .toolbar { position:sticky; top:0; z-index:10; background:#1f4d36; padding:12px 20px; display:flex; gap:10px; align-items:center; }
+  .toolbar { position:sticky; top:0; z-index:10; background:#1f4d36; padding:12px 20px; display:flex; gap:10px; align-items:center; font-family:Arial,sans-serif; }
   .toolbar button, .toolbar a { background:#2f6f4f; color:#fff; border:none; padding:9px 16px; border-radius:6px; font-weight:600; cursor:pointer; text-decoration:none; font-size:.9rem; }
   .toolbar span { color:#fff; font-size:.85rem; opacity:.85; }
 
-  .sheet { background:#fff; width:210mm; min-height:297mm; margin:16px auto; padding:12mm 14mm; box-shadow:0 0 8px rgba(0,0,0,.15); }
+  /* Tampilan layar meniru kertas F4 dengan margin yang sama dengan hasil cetak */
+  .sheet { background:#fff; width:215mm; min-height:330mm; margin:16px auto; padding:12mm 15mm; box-shadow:0 0 8px rgba(0,0,0,.15); }
 
-  .kop { display:flex; align-items:center; gap:14px; }
-  .kop img.logo { width:78px; height:78px; object-fit:contain; flex-shrink:0; }
+  /* ===== Kop ===== */
+  .kop { display:flex; align-items:center; gap:4mm; }
+  .kop img.logo { width:22mm; height:22mm; object-fit:contain; flex-shrink:0; }
   .kop .teks-kop { text-align:center; flex:1; }
-  .kop .teks-kop .yayasan { font-weight:bold; font-size:12.5pt; }
-  .kop .teks-kop .sekolah { font-weight:bold; font-size:14pt; margin-top:2px; }
-  .kop .teks-kop .info { font-weight:bold; font-size:9.5pt; margin-top:3px; }
-  .garis-kop { border:none; border-top:3px double #111; margin:6px 0 12px; }
+  .kop .teks-kop .yayasan { font-weight:bold; font-size:14pt; }
+  .kop .teks-kop .sekolah { font-weight:bold; font-size:14pt; margin-top:1px; }
+  .kop .teks-kop .info { font-weight:bold; font-size:10pt; margin-top:2px; line-height:1.3; }
+  .garis-kop { border:none; border-top:3px double #111; margin:3mm 0 4mm; }
 
-  .judul { text-align:center; font-weight:bold; font-size:13pt; margin:0 0 14px; line-height:1.4; }
+  .judul { text-align:center; font-weight:bold; font-size:14pt; margin:0 0 5mm; line-height:1.4; }
 
-  table.identitas { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10.5pt; }
-  table.identitas td { padding:3px 4px; vertical-align:top; }
-  table.identitas td.label { font-weight:bold; width:110px; }
-  table.identitas td.titik { font-weight:bold; width:16px; }
+  /* ===== Identitas ===== */
+  table.identitas { width:100%; border-collapse:collapse; margin-bottom:4mm; font-size:12pt; }
+  table.identitas td { padding:1mm 1mm; vertical-align:top; }
+  table.identitas td.label { font-weight:bold; width:33mm; }
+  table.identitas td.titik { font-weight:bold; width:5mm; }
 
-  .aspek { border:1.5px solid #111; margin-bottom:-1.5px; page-break-inside:avoid; }
-  .aspek .judul-aspek { font-weight:bold; font-size:10.5pt; padding:5px 8px; border-bottom:1.5px solid #111; background:#f2f2f2; }
-  .aspek .baris-bimbingan { padding:8px 10px 8px; border-top:1.5px solid #111; }
+  /* ===== Aspek perkembangan ===== */
+  .aspek { border:1.5px solid #111; margin-bottom:-1.5px; break-inside:avoid; page-break-inside:avoid; }
+  .aspek .judul-aspek { font-weight:bold; font-size:14pt; padding:1.5mm 3mm; border-bottom:1.5px solid #111; }
+  .aspek p.intro { padding:2.5mm 3mm 1mm; text-align:justify; text-justify:inter-word; }
   table.baris-capaian { width:100%; border-collapse:collapse; }
-  table.baris-capaian td { padding:8px 10px 8px; vertical-align:top; }
-  table.baris-capaian td.kolom-foto { width:132px; }
-  table.baris-capaian img.foto { width:120px; display:block; border:1px solid #999; }
-  .aspek .intro { margin:0 0 4px; }
-  .aspek ul { margin:0 0 6px; padding-left:20px; }
-  .aspek ul li { margin-bottom:2px; }
-  .aspek .intro-bimbingan { margin:6px 0 4px; }
+  table.baris-capaian td { padding:1.5mm 3mm 3mm; vertical-align:top; }
+  table.baris-capaian td.kolom-foto { width:47mm; }
+  table.baris-capaian img.foto { width:41mm; max-height:56mm; object-fit:cover; display:block; border:1px solid #999; }
+  .aspek .baris-bimbingan { padding:2.5mm 3mm 3mm; border-top:1.5px solid #111; }
+  .aspek .intro-bimbingan { margin:0 0 1.5mm; text-align:justify; text-justify:inter-word; }
 
-  .penutup { border:1.5px solid #111; border-top:none; padding:6px 10px; margin-bottom:-1.5px; font-style:italic; }
+  /* Daftar poin: penanda panah, teks rata kiri-kanan */
+  ul.poin { list-style:none; margin:0; padding:0; }
+  ul.poin li { position:relative; padding-left:6mm; margin-bottom:1.2mm; text-align:justify; text-justify:inter-word; }
+  ul.poin li::before { content:""; position:absolute; left:.8mm; top:.45em; border-left:2.4mm solid #111; border-top:1.3mm solid transparent; border-bottom:1.3mm solid transparent; }
 
-  table.tumbuh-hadir { width:100%; border-collapse:collapse; margin-top:0; font-size:10.2pt; }
-  table.tumbuh-hadir th { border:1.5px solid #111; background:#f2f2f2; text-align:left; padding:5px 8px; }
-  table.tumbuh-hadir td { border:1.5px solid #111; padding:5px 8px; vertical-align:top; }
-  table.tumbuh-hadir ul { margin:0; padding-left:18px; }
-  table.tumbuh-hadir li { margin-bottom:6px; }
+  .penutup { border:1.5px solid #111; border-top:none; padding:2mm 3mm; margin-bottom:-1.5px; font-style:italic; break-inside:avoid; }
 
-  .ttd-row { display:flex; justify-content:space-between; margin-top:26px; font-size:10.5pt; }
+  /* ===== Pertumbuhan & kehadiran ===== */
+  table.tumbuh-hadir { width:100%; border-collapse:collapse; margin-top:0; font-size:12pt; break-inside:avoid; page-break-inside:avoid; }
+  table.tumbuh-hadir th { border:1.5px solid #111; text-align:left; padding:1.5mm 3mm; font-size:12pt; }
+  table.tumbuh-hadir td { border:1.5px solid #111; padding:2mm 3mm; vertical-align:top; }
+  table.tumbuh-hadir ul { margin:0; padding-left:5mm; }
+  table.tumbuh-hadir li { margin-bottom:1.5mm; }
+  table.tumbuh-hadir .lbl { display:inline-block; min-width:38mm; }
+
+  /* ===== Tanda tangan ===== */
+  .blok-ttd { break-inside:avoid; page-break-inside:avoid; }
+  .ttd-row { display:flex; justify-content:space-between; margin-top:7mm; font-size:12pt; }
   .ttd-row .kiri { width:45%; }
   .ttd-row .kanan { width:45%; text-align:left; }
-  .ttd-row .spasi { height:55px; }
+  .ttd-row .spasi { height:20mm; }
 
-  .ttd-kepsek { margin-top:26px; text-align:center; font-size:10.5pt; }
-  .ttd-kepsek .spasi { height:50px; }
+  .ttd-kepsek { margin-top:7mm; text-align:center; font-size:12pt; }
+  .ttd-kepsek .spasi { height:20mm; }
 
   .loading { padding:60px; text-align:center; font-family:Arial; color:#666; }
 
   @media print {
     .toolbar { display:none; }
-    .sheet { box-shadow:none; margin:0; width:auto; min-height:auto; }
+    /* Margin sudah diatur oleh @page, jadi padding dan margin lembar dinolkan agar tidak dobel */
+    .sheet { box-shadow:none; margin:0; padding:0; width:auto; min-height:auto; }
     body { background:#fff; }
   }
 </style>
@@ -119,30 +134,38 @@
     throw new Error('laporan belum ada');
   }
 
+  // Membersihkan simbol "nyasar" dari hasil salin-tempel Word (kotak kosong / penanda bullet lama),
+  // karena penanda panah sudah dibuat otomatis oleh tampilan cetak.
+  function bersihkan(baris) {
+    return baris
+      .replace(/[\uE000-\uF8FF\u200B-\u200D\uFEFF]/g, '')
+      .replace(/^[\s\u2022\u25CF\u25AA\u25A0\u2023\u27A2\u27A4\u2794\u279C\u25BA\u25B6\u2192\u00B7\-\u2013\u2014*]+/, '')
+      .trim();
+  }
+
   function poinList(teks) {
-    return (teks || '').split(/\r\n|\r|\n/).map(s => s.trim()).filter(s => s !== '')
+    return (teks || '').split(/\r\n|\r|\n/).map(bersihkan).filter(s => s !== '')
       .map(s => `<li>${escapeHtml(s)}</li>`).join('');
   }
 
   const htmlAspek = Object.entries(ASPEK_LIST).map(([kode, info]) => {
     const fotoUrl = lap[`${kode}_foto_url`];
-    const bimbingan = lap[`${kode}_bimbingan`] || '';
+    const poinCapaian = poinList(lap[`${kode}_capaian`]);
+    const poinBimbingan = poinList(lap[`${kode}_bimbingan`]);
     return `
       <div class="aspek">
         <div class="judul-aspek">PERKEMBANGAN ${info.label.toUpperCase()}</div>
+        <p class="intro">${escapeHtml(info.intro)}</p>
         <table class="baris-capaian">
           <tr>
-            ${fotoUrl ? `<td class="kolom-foto"><img class="foto" src="${fotoUrl}"></td>` : ''}
-            <td>
-              <p class="intro">${escapeHtml(info.intro)}</p>
-              <ul>${poinList(lap[`${kode}_capaian`])}</ul>
-            </td>
+            ${fotoUrl ? `<td class="kolom-foto"><img class="foto" src="${escapeHtml(fotoUrl)}"></td>` : ''}
+            <td><ul class="poin">${poinCapaian}</ul></td>
           </tr>
         </table>
-        ${bimbingan.trim() !== '' ? `
+        ${poinBimbingan !== '' ? `
           <div class="baris-bimbingan">
             <p class="intro-bimbingan">${TEKS_INTRO_BIMBINGAN}</p>
-            <ul>${poinList(bimbingan)}</ul>
+            <ul class="poin">${poinBimbingan}</ul>
           </div>` : ''}
       </div>
     `;
@@ -169,7 +192,7 @@
         <tr>
           <td class="label">NIS/NISN</td><td class="titik">:</td>
           <td><strong>${escapeHtml(siswa.nis) || '-'}/${escapeHtml(siswa.nisn) || '-'}</strong></td>
-          <td class="label" style="width:90px;">SEMESTER</td><td class="titik">:</td><td><strong>${escapeHtml(semester)}</strong></td>
+          <td class="label" style="width:30mm;">SEMESTER</td><td class="titik">:</td><td><strong>${escapeHtml(semester)}</strong></td>
         </tr>
       </table>
 
@@ -181,36 +204,38 @@
         <tr><th style="width:50%;">PERTUMBUHAN</th><th>KEHADIRAN</th></tr>
         <tr>
           <td><ul>
-            <li>Berat Badan &nbsp;: ${escapeHtml(lap.berat_badan) || '-'}</li>
-            <li>Tinggi Badan &nbsp;: ${escapeHtml(lap.tinggi_badan) || '-'}</li>
-            <li>Lingkar Kepala : ${escapeHtml(lap.lingkar_kepala) || '-'}</li>
+            <li><span class="lbl">Berat Badan</span>: ${escapeHtml(lap.berat_badan) || '-'}</li>
+            <li><span class="lbl">Tinggi Badan</span>: ${escapeHtml(lap.tinggi_badan) || '-'}</li>
+            <li><span class="lbl">Lingkar Kepala</span>: ${escapeHtml(lap.lingkar_kepala) || '-'}</li>
           </ul></td>
           <td><ul>
-            <li>Sakit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${escapeHtml(lap.sakit) || '-'}</li>
-            <li>Izin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${escapeHtml(lap.izin) || '-'}</li>
-            <li>Tanpa Keterangan : ${escapeHtml(lap.tanpa_keterangan) || '-'}</li>
+            <li><span class="lbl">Sakit</span>: ${escapeHtml(lap.sakit) || '-'}</li>
+            <li><span class="lbl">Izin</span>: ${escapeHtml(lap.izin) || '-'}</li>
+            <li><span class="lbl">Tanpa Keterangan</span>: ${escapeHtml(lap.tanpa_keterangan) || '-'}</li>
           </ul></td>
         </tr>
       </table>
 
-      <div class="ttd-row">
-        <div class="kiri">
-          Orang Tua / Wali
-          <div class="spasi"></div>
-          <strong>(________________________)</strong>
+      <div class="blok-ttd">
+        <div class="ttd-row">
+          <div class="kiri">
+            Orang Tua / Wali
+            <div class="spasi"></div>
+            <strong>(________________________)</strong>
+          </div>
+          <div class="kanan">
+            <strong>${escapeHtml(sekolah?.kota) || 'Depok'}, ${tanggalIndo(lap.tanggal_raport)}</strong><br>
+            Wali Kelas
+            <div class="spasi"></div>
+            <strong>${escapeHtml(waliKelas) || '________________________'}</strong>
+          </div>
         </div>
-        <div class="kanan">
-          <strong>${escapeHtml(sekolah?.kota) || 'Depok'}, ${tanggalIndo(lap.tanggal_raport)}</strong><br>
-          Wali Kelas
-          <div class="spasi"></div>
-          <strong>${escapeHtml(waliKelas) || '________________________'}</strong>
-        </div>
-      </div>
 
-      <div class="ttd-kepsek">
-        Mengetahui,<br>Kepala Sekolah ${escapeHtml(sekolah?.nama_sekolah) || ''}
-        <div class="spasi"></div>
-        <strong>${escapeHtml(sekolah?.kepala_sekolah) || '________________________'}</strong>
+        <div class="ttd-kepsek">
+          Mengetahui,<br>Kepala Sekolah ${escapeHtml(sekolah?.nama_sekolah) || ''}
+          <div class="spasi"></div>
+          <strong>${escapeHtml(sekolah?.kepala_sekolah) || '________________________'}</strong>
+        </div>
       </div>
     </div>
   `;
