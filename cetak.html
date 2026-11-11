@@ -36,14 +36,15 @@
   table.identitas td.titik { font-weight:bold; width:5mm; }
 
   /* ===== Aspek perkembangan ===== */
-  .aspek { border:1.5px solid #111; margin-bottom:-1.5px; break-inside:avoid; page-break-inside:avoid; }
+  .aspek { margin-bottom:-1.5px; }
+  .aspek .blok-capaian { border:1.5px solid #111; margin-bottom:-1.5px; break-inside:avoid; page-break-inside:avoid; }
   .aspek .judul-aspek { font-weight:bold; font-size:14pt; padding:1mm 3mm; border-bottom:1.5px solid #111; }
   .aspek p.intro { padding:1.5mm 3mm 0.5mm; text-align:justify; text-justify:inter-word; }
-  table.baris-capaian { width:100%; border-collapse:collapse; }
+  table.baris-capaian { width:100%; border-collapse:collapse; table-layout:fixed; }
   table.baris-capaian td { padding:1mm 3mm 2mm; vertical-align:top; }
   table.baris-capaian td.kolom-foto { width:44mm; }
   table.baris-capaian img.foto { width:38mm; max-height:46mm; object-fit:cover; display:block; border:1px solid #999; }
-  .aspek .baris-bimbingan { padding:1.5mm 3mm 2mm; border-top:1.5px solid #111; }
+  .aspek .baris-bimbingan { padding:1.5mm 3mm 2mm; border:1.5px solid #111; break-inside:avoid; page-break-inside:avoid; }
   .aspek .intro-bimbingan { margin:0 0 0.5mm; text-align:justify; text-justify:inter-word; }
 
   /* Daftar poin: penanda panah, teks rata kiri-kanan */
@@ -154,6 +155,7 @@
     const poinBimbingan = poinList(lap[`${kode}_bimbingan`]);
     return `
       <div class="aspek">
+        <div class="blok-capaian">
         <div class="judul-aspek">PERKEMBANGAN ${info.label.toUpperCase()}</div>
         <p class="intro">${escapeHtml(info.intro)}</p>
         <table class="baris-capaian">
@@ -162,6 +164,7 @@
             <td><ul class="poin">${poinCapaian}</ul></td>
           </tr>
         </table>
+        </div>
         ${poinBimbingan !== '' ? `
           <div class="baris-bimbingan">
             <p class="intro-bimbingan">${TEKS_INTRO_BIMBINGAN}</p>
