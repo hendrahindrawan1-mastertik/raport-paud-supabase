@@ -5,8 +5,8 @@
 <title>Cetak Raport - Raport PAUD</title>
 <style>
   /* Kertas F4 (215 x 330 mm). Ubah angka di bawah ini jika sekolah punya ukuran baku lain:
-     atas-bawah 10mm, kiri-kanan 15mm. Samakan juga dengan padding .sheet di bawah. */
-  @page { size: 215mm 330mm; margin: 10mm 15mm; }
+     atas-bawah 10mm, kiri-kanan 10mm. Samakan juga dengan padding .sheet di bawah. */
+  @page { size: 215mm 330mm; margin: 10mm 10mm; }
   * { box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; color:#111; margin:0; background:#e9ece9; font-size:12pt; line-height:1.15; }
   p { margin:0; }
@@ -16,11 +16,11 @@
   .toolbar span { color:#fff; font-size:.85rem; opacity:.85; }
 
   /* Tampilan layar meniru kertas F4 dengan margin yang sama dengan hasil cetak */
-  .sheet { background:#fff; width:215mm; min-height:330mm; margin:16px auto; padding:10mm 15mm; box-shadow:0 0 8px rgba(0,0,0,.15); }
+  .sheet { background:#fff; width:215mm; min-height:330mm; margin:16px auto; padding:10mm 10mm; box-shadow:0 0 8px rgba(0,0,0,.15); }
 
   /* ===== Kop ===== */
   .kop { display:flex; align-items:center; gap:4mm; }
-  .kop img.logo { width:20mm; height:20mm; object-fit:contain; flex-shrink:0; }
+  .kop img.logo { width:27mm; height:27mm; object-fit:contain; flex-shrink:0; }
   .kop .teks-kop { text-align:center; flex:1; }
   .kop .teks-kop .yayasan { font-weight:bold; font-size:14pt; }
   .kop .teks-kop .sekolah { font-weight:bold; font-size:14pt; margin-top:1px; }
