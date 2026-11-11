@@ -4,7 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard - Raport PAUD</title>
-<link rel="stylesheet" href="assets/style.css?v=2">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+/* Banner motivasi di sisi kiri dan kanan: hanya muncul di layar lebar */
+.sisi{display:none;}
+@media (min-width:1640px){
+  .sisi:not([hidden]){
+    display:flex;flex-direction:column;gap:14px;
+    position:fixed;top:112px;width:240px;
+    padding:26px 22px 30px;border-radius:24px;overflow:hidden;
+  }
+  .sisi > *{position:relative;z-index:1;}
+  .sisi::after{content:"";position:absolute;width:130px;height:130px;border-radius:50%;right:-40px;bottom:-45px;}
+  .sisi-kiri{left:calc(50% - 530px - 28px - 240px);background:#1f5c3f;color:#fff;}
+  .sisi-kiri::after{background:#f3bd52;}
+  .sisi-kiri .sisi-label{color:#f3bd52;}
+  .sisi-kiri .sisi-ikon{color:#f3bd52;}
+  .sisi-kanan{left:calc(50% + 530px + 28px);background:#fcefd0;color:#3a2a00;}
+  .sisi-kanan::after{background:#2a7050;}
+  .sisi-kanan .sisi-label{color:#6b4300;}
+  .sisi-kanan .sisi-ikon{color:#c98a12;}
+  .sisi-label{font-weight:800;font-size:.9rem;}
+  .sisi-teks{margin:0;font-size:1.15rem;line-height:1.55;font-weight:700;}
+  .sisi-ket{font-size:.85rem;opacity:.85;}
+}
+@media print{.sisi{display:none !important;}}
+</style>
 </head>
 <body>
 <div id="navbar"></div>
@@ -12,6 +37,19 @@
   <div class="loading">Memuat...</div>
 </div>
 <footer>Aplikasi Raport PAUD &middot; TAAM Nurul Iman &middot; ditenagai Supabase</footer>
+
+<aside class="sisi sisi-kiri" hidden aria-label="Semangat untuk guru">
+  <svg class="sisi-ikon" viewBox="0 0 24 24" width="34" height="34" fill="currentColor" aria-hidden="true"><path d="M9.5 6C6.5 7 4 9.8 4 13.5V18h6v-6H7c.1-2 1.2-3.3 3.2-4zM19.5 6c-3 1-5.5 3.8-5.5 7.5V18h6v-6h-3c.1-2 1.2-3.3 3.2-4z"/></svg>
+  <div class="sisi-label">Semangat hari ini</div>
+  <p class="sisi-teks" id="kutipanKiri"></p>
+  <div class="sisi-ket">Untuk Bapak/Ibu Guru</div>
+</aside>
+<aside class="sisi sisi-kanan" hidden aria-label="Pengingat untuk guru">
+  <svg class="sisi-ikon" viewBox="0 0 24 24" width="34" height="34" fill="currentColor" aria-hidden="true"><path d="M9.5 6C6.5 7 4 9.8 4 13.5V18h6v-6H7c.1-2 1.2-3.3 3.2-4zM19.5 6c-3 1-5.5 3.8-5.5 7.5V18h6v-6h-3c.1-2 1.2-3.3 3.2-4z"/></svg>
+  <div class="sisi-label">Pengingat manis</div>
+  <p class="sisi-teks" id="kutipanKanan"></p>
+  <div class="sisi-ket">TAAM Nurul Iman</div>
+</aside>
 
 <script type="module">
   import { wajibLogin, supabase } from './js/supabase-init.js';
@@ -68,6 +106,27 @@
       </ol>
     </div>
   `;
+
+  // Kutipan motivasi: berganti setiap hari
+  const kutipan = [
+    'Setiap anak tumbuh dengan kecepatannya sendiri. Kesabaran Bapak/Ibu adalah pupuk terbaiknya.',
+    'Satu senyuman dan satu pujian kecil hari ini bisa menjadi kenangan indah seumur hidup anak.',
+    'Mengajar PAUD bukan sekadar mengenalkan huruf dan angka, tetapi menanam rasa percaya diri dan cinta belajar.',
+    'Lelah Bapak/Ibu hari ini adalah bekal masa depan anak-anak kita.',
+    'Catatan perkembangan yang ditulis dengan hati membuat orang tua merasa dekat dengan buah hatinya.',
+    'Anak belajar dari apa yang ia lihat. Teladan terbaik adalah guru yang tulus.',
+    'Tidak ada kemajuan yang terlalu kecil. Setiap langkah kecil anak layak dirayakan.',
+    'Terima kasih telah sabar menjawab pertanyaan “kenapa” yang keseratus kalinya hari ini.',
+    'Kelas yang ceria dimulai dari guru yang tersenyum.',
+    'Kebaikan yang Bapak/Ibu tanam hari ini akan tumbuh menjadi doa dari anak-anak kelak.',
+    'Bermain adalah cara anak belajar. Biarkan mereka bereksplorasi, Bapak/Ibu mendampingi.',
+    'Guru PAUD adalah orang pertama yang mengenalkan anak pada dunia sekolah. Peran yang sangat mulia.'
+  ];
+  const sekarang = new Date();
+  const hari = Math.floor(new Date(sekarang.getFullYear(), sekarang.getMonth(), sekarang.getDate()).getTime() / 86400000);
+  document.getElementById('kutipanKiri').textContent = kutipan[hari % kutipan.length];
+  document.getElementById('kutipanKanan').textContent = kutipan[(hari + 6) % kutipan.length];
+  document.querySelectorAll('.sisi').forEach(el => { el.hidden = false; });
 </script>
 </body>
 </html>
