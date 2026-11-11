@@ -10,28 +10,34 @@
 .sisi{display:none;}
 @media (min-width:1640px){
   .sisi:not([hidden]){
-    display:flex;flex-direction:column;gap:14px;
-    position:fixed;top:112px;width:240px;
-    padding:26px 22px 30px;border-radius:24px;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:center;gap:16px;
+    position:fixed;top:112px;bottom:24px;width:240px;
+    padding:36px 24px;border-radius:24px;overflow:hidden;
   }
   .sisi > *{position:relative;z-index:1;}
-  .sisi::after{content:"";position:absolute;width:130px;height:130px;border-radius:50%;right:-40px;bottom:-45px;}
+  .sisi::before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-50px;top:-50px;}
+  .sisi::after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;right:-55px;bottom:-60px;}
   .sisi-kiri{left:calc(50% - 530px - 28px - 240px);background:#1f5c3f;color:#fff;}
   .sisi-kiri::after{background:#f3bd52;}
+  .sisi-kiri::before{background:#2a7050;}
   .sisi-kiri .sisi-label{color:#f3bd52;}
   .sisi-kiri .sisi-ikon{color:#f3bd52;}
   .sisi-kanan{left:calc(50% + 530px + 28px);background:#fcefd0;color:#3a2a00;}
   .sisi-kanan::after{background:#2a7050;}
+  .sisi-kanan::before{background:#f6d99a;}
   .sisi-kanan .sisi-label{color:#6b4300;}
   .sisi-kanan .sisi-ikon{color:#c98a12;}
   .sisi-label{font-weight:800;font-size:.9rem;}
-  .sisi-teks{margin:0;font-size:1.15rem;line-height:1.55;font-weight:700;}
+  .sisi-teks{margin:0;font-size:1.3rem;line-height:1.55;font-weight:700;}
   .sisi-ket{font-size:.85rem;opacity:.85;}
 }
-@media print{.sisi{display:none !important;}}
+@media (max-height:620px){.sisi{display:none !important;}}
+#kelopak{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;}
+@media print{.sisi,#kelopak{display:none !important;}}
 </style>
 </head>
 <body>
+<canvas id="kelopak" aria-hidden="true"></canvas>
 <div id="navbar"></div>
 <div class="container" id="konten">
   <div class="loading">Memuat...</div>
@@ -127,6 +133,68 @@
   document.getElementById('kutipanKiri').textContent = kutipan[hari % kutipan.length];
   document.getElementById('kutipanKanan').textContent = kutipan[(hari + 6) % kutipan.length];
   document.querySelectorAll('.sisi').forEach(el => { el.hidden = false; });
+
+  // Efek kelopak jatuh: lembut, berada di belakang konten
+  (function mulaiKelopak() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const kanvas = document.getElementById('kelopak');
+    if (!kanvas) return;
+    const ctx = kanvas.getContext('2d');
+    const warna = ['#f7c6d0', '#f4b6c2', '#fbd3da', '#fde2c8', '#fce8a6'];
+    const acak = (a, b) => a + Math.random() * (b - a);
+    const jumlah = window.innerWidth < 760 ? 16 : 30;
+    let lebar = 0, tinggi = 0;
+
+    function ukur() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      lebar = window.innerWidth;
+      tinggi = window.innerHeight;
+      kanvas.width = lebar * dpr;
+      kanvas.height = tinggi * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    ukur();
+    window.addEventListener('resize', ukur);
+
+    const kelopak = Array.from({ length: jumlah }, () => ({
+      x: acak(0, lebar), y: acak(0, tinggi),
+      ukuran: acak(7, 13), kecepatan: acak(22, 48),
+      ayun: acak(14, 34), fasa: acak(0, 6.28), lajuAyun: acak(0.5, 1.1),
+      rot: acak(0, 6.28), lajuRot: acak(-1, 1),
+      balik: acak(0, 6.28), lajuBalik: acak(1, 2.2),
+      warna: warna[Math.floor(Math.random() * warna.length)],
+      alpha: acak(0.55, 0.85)
+    }));
+
+    let terakhir = performance.now();
+    function gambar(sekarang) {
+      const dt = Math.min((sekarang - terakhir) / 1000, 0.05);
+      terakhir = sekarang;
+      ctx.clearRect(0, 0, lebar, tinggi);
+      for (const k of kelopak) {
+        k.y += k.kecepatan * dt;
+        k.fasa += k.lajuAyun * dt;
+        k.rot += k.lajuRot * dt;
+        k.balik += k.lajuBalik * dt;
+        if (k.y > tinggi + 20) { k.y = -20; k.x = acak(0, lebar); }
+        const s = k.ukuran;
+        ctx.save();
+        ctx.translate(k.x + Math.sin(k.fasa) * k.ayun, k.y);
+        ctx.rotate(k.rot);
+        ctx.scale(0.45 + 0.55 * Math.abs(Math.cos(k.balik)), 1);
+        ctx.globalAlpha = k.alpha;
+        ctx.fillStyle = k.warna;
+        ctx.beginPath();
+        ctx.moveTo(0, -s);
+        ctx.bezierCurveTo(s * 0.9, -s * 0.6, s * 0.8, s * 0.6, 0, s);
+        ctx.bezierCurveTo(-s * 0.8, s * 0.6, -s * 0.9, -s * 0.6, 0, -s);
+        ctx.fill();
+        ctx.restore();
+      }
+      requestAnimationFrame(gambar);
+    }
+    requestAnimationFrame(gambar);
+  })();
 </script>
 </body>
 </html>
