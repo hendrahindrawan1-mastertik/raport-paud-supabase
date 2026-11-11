@@ -26,30 +26,45 @@
   ]);
 
   document.getElementById('konten').innerHTML = `
-    <h1>Selamat datang di Aplikasi Raport PAUD</h1>
-    <p>Kelola data siswa dan isi Laporan Perkembangan Anak per semester (6 aspek), lalu cetak raport otomatis. Data tersimpan di cloud (Supabase) sehingga bisa diakses dari mana saja, termasuk dari rumah masing-masing guru.</p>
-
-    <div class="grid-2">
-      <div class="card" style="text-align:center;">
-        <h2>👧 ${jumlahSiswa ?? 0}</h2>
-        <p>Siswa terdaftar</p>
-        <a class="btn small" href="siswa.html">Kelola Data Siswa</a>
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <h1>Selamat datang di Aplikasi Raport PAUD</h1>
+          <p>Kelola data siswa dan isi Laporan Perkembangan Anak per semester (6 aspek), lalu cetak raport otomatis. Data tersimpan di cloud (Supabase) sehingga bisa diakses dari mana saja, termasuk dari rumah masing-masing guru.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-icon gold">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9.5" r="2.5"/><path d="M17.5 14.5c2.2.2 3.7 1.6 4.1 4"/></svg>
+            </span>
+            <div>
+              <div class="stat-num">${jumlahSiswa ?? 0}</div>
+              <div class="stat-label">Siswa terdaftar</div>
+              <a href="siswa.html">Kelola Data Siswa</a>
+            </div>
+          </div>
+          <div class="stat">
+            <span class="stat-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>
+            </span>
+            <div>
+              <div class="stat-num">${jumlahKelas ?? 0}</div>
+              <div class="stat-label">Kelas / rombel</div>
+              <a href="kelas.html">Kelola Kelas</a>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card" style="text-align:center;">
-        <h2>🏫 ${jumlahKelas ?? 0}</h2>
-        <p>Kelas / rombel</p>
-        <a class="btn small" href="kelas.html">Kelola Kelas</a>
-      </div>
-    </div>
+    </section>
 
     <div class="card">
       <h2>Langkah membuat raport</h2>
-      <ol>
-        <li>Lengkapi <a href="pengaturan.html">Pengaturan Sekolah</a> (nama yayasan, izin, NPSN, alamat, kepala sekolah, tahun ajaran, semester, dan 1-2 logo).</li>
-        <li>Pastikan <a href="kelas.html">data kelas</a> dan wali kelasnya sudah benar.</li>
-        <li>Tambahkan <a href="siswa.html">biodata siswa</a>.</li>
-        <li>Di halaman <strong>Data Siswa</strong>, klik <strong>"📝 Isi Laporan Semester"</strong> pada siswa yang diinginkan -- isi ke-6 aspek perkembangan lengkap dengan foto dan poin-poin capaian/bimbingan, plus data pertumbuhan &amp; kehadiran.</li>
-        <li>Klik <strong>"🖨️ Cetak Raport"</strong> -- raport resmi otomatis tersusun, siap dicetak / disimpan sebagai PDF dari browser.</li>
+      <ol class="steps">
+        <li><span>Lengkapi <a href="pengaturan.html">Pengaturan Sekolah</a> (nama yayasan, izin, NPSN, alamat, kepala sekolah, tahun ajaran, semester, dan 1-2 logo).</span></li>
+        <li><span>Pastikan <a href="kelas.html">data kelas</a> dan wali kelasnya sudah benar.</span></li>
+        <li><span>Tambahkan <a href="siswa.html">biodata siswa</a>.</span></li>
+        <li><span>Di halaman <strong>Data Siswa</strong>, klik <strong>&ldquo;Isi Laporan Semester&rdquo;</strong> pada siswa yang diinginkan. Isi ke-6 aspek perkembangan lengkap dengan foto dan poin-poin capaian/bimbingan, plus data pertumbuhan &amp; kehadiran.</span></li>
+        <li><span>Klik <strong>&ldquo;Cetak Raport&rdquo;</strong>. Raport resmi tersusun otomatis, siap dicetak atau disimpan sebagai PDF dari browser.</span></li>
       </ol>
     </div>
   `;
